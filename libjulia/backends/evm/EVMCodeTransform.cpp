@@ -39,8 +39,16 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 
 	int expectedItems = _varDecl.variables.size();
 	int height = m_assembly.stackHeight();
-	boost::apply_visitor(*this, *_varDecl.value);
-	expectDeposit(expectedItems, height);
+	if (_varDecl.value)
+	{
+		boost::apply_visitor(*this, *_varDecl.value);
+		expectDeposit(expectedItems, height);
+	}
+	else
+	{
+		while (expectedItems--)
+			m_assembly.appendConstant(u256(0));
+	}
 	for (auto const& variable: _varDecl.variables)
 	{
 		auto& var = boost::get<Scope::Variable>(m_scope->identifiers.at(variable.name));
