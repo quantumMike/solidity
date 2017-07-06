@@ -22,6 +22,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
+#include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/AST_accept.h>
 
 #include <libdevcore/SHA3.h>
@@ -409,6 +410,23 @@ bool VariableDeclaration::isCallableParameter() const
 	for (auto const& variable: callable->parameters())
 		if (variable.get() == this)
 			return true;
+	if (callable->returnParameterList())
+		for (auto const& variable: callable->returnParameterList()->parameters())
+			if (variable.get() == this)
+				return true;
+	return false;
+}
+
+bool VariableDeclaration::isLocalOrReturn() const
+{
+	return isReturnParameter() || (isLocalVariable() && !isCallableParameter());
+}
+
+bool VariableDeclaration::isReturnParameter() const
+{
+	auto const* callable = dynamic_cast<CallableDeclaration const*>(scope());
+	if (!callable)
+		return false;
 	if (callable->returnParameterList())
 		for (auto const& variable: callable->returnParameterList()->parameters())
 			if (variable.get() == this)
